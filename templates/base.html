@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduMentor AI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        .flash-message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        .flash-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--secondary-color);
+        }
+        .flash-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        .flash-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+        .flash-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 1rem;
+        }
+        @media (max-width: 768px) {
+            .user-info {
+                margin-left: 0;
+                margin-top: 1rem;
+                padding: 0.75rem 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+        .user-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .badge-student {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-teacher {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-admin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="/" style="text-decoration: none; color: inherit;">🎓 EduMentor AI</a></h1>
+            </div>
+            <!-- Mobile menu button -->
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                {% if session.user_id %}
+                    <a href="/quiz">Quiz</a>
+                    <a href="/flashcards">Flashcards</a>
+                    <a href="/doubt-solver">Doubt Solver</a>
+                    {% if session.role in ['teacher', 'admin'] %}
+                        <a href="/lesson-plan">Lesson Plan</a>
+                        <a href="/homework">Homework</a>
+                    {% endif %}
+                    <a href="/progress">Progress</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {% endif %}
+            </div>
+            {% if session.user_id %}
+            <div class="user-info">
+                <span class="user-badge badge-{{ session.role }}">{{ session.role|title }}</span>
+                <span style="color: var(--text-color);">{{ session.username }}</span>
+                <a href="/logout" style="color: var(--primary-color); text-decoration: none;">Logout</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container">
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 EduMentor AI. Powered by AI for Education.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Quiz - EduMentor AI{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Generate Interactive Quizzes</h2>
+            <p>Create custom quizzes with multiple-choice questions on any topic</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <section class="section">
+            <h2>Create Your Quiz</h2>
+            
+            <!-- Quiz Input Form -->
+            <div class="input-group">
+                <label for="quizTopic">Enter Topic:</label>
+                <input type="text" id="quizTopic" placeholder="e.g., Photosynthesis, World War II, Python Functions..." required>
+            </div>
+
+            <div class="options">
+                <div class="option-group">
+                    <label for="numQuestions">Number of Questions:</label>
+                    <input type="number" id="numQuestions" value="10" min="1" max="50" style="padding: 0.5rem; border: 2px solid var(--border-color); border-radius: 6px;">
+                </div>
+                <div class="option-group">
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button id="generateQuizBtn" class="btn-primary">Generate Quiz</button>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Generating your quiz...</p>
+            </div>
+
+            <!-- Quiz Results -->
+            <div id="quizResults" class="quiz-container hidden"></div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}
+

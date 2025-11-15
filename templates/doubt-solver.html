@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Doubt Solver - EduMentor AI{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>🤔 Ask Your Questions</h2>
+            <p>Get instant AI-powered answers to your learning questions</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <section class="section">
+            <h2>Ask a Question</h2>
+            
+            <!-- Doubt Solver Form -->
+            <div class="input-group">
+                <label for="doubtQuestion">Your Question:</label>
+                <textarea id="doubtQuestion" placeholder="Enter your question here..." rows="4" required></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="doubtContext">Optional Context or Topic:</label>
+                <input type="text" id="doubtContext" placeholder="e.g., Biology, Mathematics, History...">
+            </div>
+
+            <!-- Solve Button -->
+            <button id="solveDoubtBtn" class="btn-primary">Get Answer</button>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Finding the best answer for you...</p>
+            </div>
+
+            <!-- Answer Display -->
+            <div id="doubtAnswer" class="answer-box hidden"></div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/doubt-solver.js') }}"></script>
+{% endblock %}
+

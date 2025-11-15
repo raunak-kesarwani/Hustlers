@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Homework Generator - EduMentor AI{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>📝 Generate Homework Assignments</h2>
+            <p>Create comprehensive homework assignments with answer keys</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <section class="section teacher-tools">
+            <h2>Create Homework Assignment</h2>
+            
+            <!-- Homework Form -->
+            <div class="input-group">
+                <label for="homeworkTopic">Topic:</label>
+                <input type="text" id="homeworkTopic" placeholder="e.g., Algebra, World History, Biology..." required>
+            </div>
+
+            <div class="option-group">
+                <label for="homeworkDifficulty">Difficulty Level:</label>
+                <select id="homeworkDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <!-- Generate Button -->
+            <button id="generateHomeworkBtn" class="btn-primary">Generate Homework</button>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Creating your homework assignment...</p>
+            </div>
+
+            <!-- Results Display -->
+            <div id="homeworkResults" class="teacher-results hidden"></div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/homework.js') }}"></script>
+{% endblock %}
+
