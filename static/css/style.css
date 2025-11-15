@@ -313,11 +313,15 @@ body {
     border: 2px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    position: relative;
+    transform: scale(1);
 }
 
 .quiz-options li:hover {
     border-color: var(--primary-color);
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
 }
 
 .quiz-options li.correct {
@@ -336,6 +340,283 @@ body {
     background: #eff6ff;
     border-radius: 6px;
     border-left: 4px solid var(--primary-color);
+}
+
+/* Quiz Progress Indicator */
+.quiz-progress {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    background: var(--bg-light);
+    border-radius: 6px;
+}
+
+.quiz-progress p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Quiz Navigation Buttons */
+.quiz-navigation {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.quiz-navigation button {
+    min-width: 120px;
+    padding: 0.75rem 1.5rem;
+}
+
+/* Selected Quiz Option - Enhanced highlighting with smooth animation */
+.quiz-options li.selected {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: var(--primary-color);
+    border-width: 3px;
+    font-weight: 600;
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    color: var(--primary-dark);
+    animation: pulse 0.6s ease;
+}
+
+/* Smooth transition when option becomes selected - left border indicator */
+.quiz-options li.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 6px 0 0 6px;
+    animation: slideIn 0.3s ease;
+}
+
+/* Animation for the left border indicator */
+@keyframes slideIn {
+    from {
+        width: 0;
+    }
+    to {
+        width: 4px;
+    }
+}
+
+/* Pulse effect when option is first selected */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+}
+
+/* Quiz Results Display */
+.quiz-results {
+    margin-top: 1rem;
+    padding: 2rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.score-display {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+}
+
+.score-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.score-percentage {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.quiz-review {
+    margin-top: 2rem;
+}
+
+/* Review section title and subtitle */
+.review-title {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.review-subtitle {
+    margin-bottom: 1.5rem;
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.quiz-review h4 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+/* Review question card */
+.review-question {
+    background: white;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    border-left: 4px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.review-question.correct-answer {
+    border-left-color: var(--secondary-color);
+    background: #f0fdf4;
+}
+
+.review-question.incorrect-answer {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Review question header with status badge */
+.review-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.review-question h5 {
+    margin: 0;
+    color: var(--text-color);
+    flex: 1;
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+
+/* Answer status badge */
+.answer-status {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.answer-status.status-correct {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.answer-status.status-incorrect {
+    background: #ef4444;
+    color: white;
+}
+
+/* Answer details container */
+.review-answer-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Answer item styling */
+.answer-item {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    border-radius: 6px;
+    background: var(--bg-light);
+}
+
+.answer-item.answer-correct {
+    background: #d1fae5;
+    border-left: 3px solid var(--secondary-color);
+}
+
+.answer-item.answer-wrong {
+    background: #fee2e2;
+    border-left: 3px solid #ef4444;
+}
+
+.answer-item.answer-correct-answer {
+    background: #dbeafe;
+    border-left: 3px solid var(--primary-color);
+}
+
+.answer-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.answer-text {
+    display: block;
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Wrong answer indicator */
+.wrong-indicator {
+    color: #dc2626;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Answer explanation */
+.answer-explanation {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.explanation-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.explanation-text {
+    margin: 0;
+    color: var(--text-color);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Quiz results actions */
+.quiz-results-actions {
+    margin-top: 2rem;
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.review-question p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
 }
 
 /* Flashcards */
@@ -457,13 +738,14 @@ body {
     display: none;
 }
 
-/* Footer */
+/* Footer - Always positioned at the bottom of the page */
 footer {
     background: var(--text-color);
     color: white;
     text-align: center;
     padding: 2rem 0;
-    margin-top: 4rem;
+    margin-top: auto; /* Push footer to bottom using flexbox */
+    width: 100%; /* Ensure footer spans full width */
 }
 
 /* Mobile Menu Toggle Button */
@@ -704,6 +986,61 @@ footer {
     .quiz-options li {
         padding: 0.875rem;
         font-size: 0.95rem;
+    }
+    
+    /* Quiz Review - Mobile */
+    .review-title {
+        font-size: 1.25rem;
+    }
+    
+    .review-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .review-question {
+        padding: 1rem;
+        margin: 0.75rem 0;
+    }
+    
+    .review-question-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .review-question h5 {
+        font-size: 1rem;
+    }
+    
+    .answer-status {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.7rem;
+    }
+    
+    .answer-item {
+        padding: 0.625rem;
+        margin: 0.5rem 0;
+    }
+    
+    .answer-label {
+        font-size: 0.9rem;
+    }
+    
+    .answer-text {
+        font-size: 0.95rem;
+    }
+    
+    .answer-explanation {
+        padding: 0.875rem;
+        margin-top: 0.75rem;
+    }
+    
+    .explanation-label {
+        font-size: 0.9rem;
+    }
+    
+    .explanation-text {
+        font-size: 0.9rem;
     }
     
     /* Flashcards - Mobile */

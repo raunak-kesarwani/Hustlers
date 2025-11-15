@@ -6,6 +6,18 @@
     <title>Register - EduMentor AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
+        /* Make body a flex container to push footer to bottom */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Main content area grows to push footer down */
+        .main-content {
+            flex: 1;
+        }
+        
         .auth-container {
             max-width: 400px;
             margin: 4rem auto;
@@ -72,50 +84,53 @@
         </div>
     </nav>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container">
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
+    <!-- Main content wrapper to push footer down -->
+    <div class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container">
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-        {% endif %}
-    {% endwith %}
+            {% endif %}
+        {% endwith %}
 
-    <!-- Register Form -->
-    <div class="container">
-        <div class="auth-container">
-            <h2>Create Account</h2>
-            <form method="POST" action="/register">
-                <div class="input-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" placeholder="Choose a username" required autofocus>
+        <!-- Register Form -->
+        <div class="container">
+            <div class="auth-container">
+                <h2>Create Account</h2>
+                <form method="POST" action="/register">
+                    <div class="input-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" placeholder="Choose a username" required autofocus>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" placeholder="At least 6 characters" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="role">Account Type:</label>
+                        <select id="role" name="role">
+                            <option value="student" selected>Student</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                        <small style="color: var(--text-light); font-size: 0.9rem;">Note: Admin accounts can only be created by existing admins</small>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Register</button>
+                </form>
+                <div class="auth-link">
+                    <p>Already have an account? <a href="/login">Login here</a></p>
                 </div>
-                <div class="input-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                </div>
-                <div class="input-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" placeholder="At least 6 characters" required>
-                </div>
-                <div class="input-group">
-                    <label for="role">Account Type:</label>
-                    <select id="role" name="role">
-                        <option value="student" selected>Student</option>
-                        <option value="teacher">Teacher</option>
-                    </select>
-                    <small style="color: var(--text-light); font-size: 0.9rem;">Note: Admin accounts can only be created by existing admins</small>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">Register</button>
-            </form>
-            <div class="auth-link">
-                <p>Already have an account? <a href="/login">Login here</a></p>
             </div>
         </div>
     </div>

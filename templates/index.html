@@ -97,17 +97,6 @@
             </div>
         </section>
 
-        <!-- Quiz Section -->
-        <section class="section">
-            <h2>Generate Quiz</h2>
-            <div class="input-group">
-                <input type="text" id="quizTopic" placeholder="Enter topic for quiz...">
-                <input type="number" id="numQuestions" placeholder="Number of questions" value="10" min="1" max="50">
-                <button id="generateQuizBtn" class="btn-primary">Generate Quiz</button>
-            </div>
-            <div id="quizResults" class="quiz-container hidden"></div>
-        </section>
-
         <!-- Flashcards Section -->
         <section class="section">
             <h2>Flashcards</h2>
@@ -161,14 +150,6 @@
             <div id="teacherResults" class="teacher-results hidden"></div>
         </section>
         {% endif %}
-
-        <!-- Progress Section -->
-        <section id="progress" class="section">
-            <h2>📈 Your Progress</h2>
-            <div id="progressDisplay" class="progress-display">
-                <p>Your learning progress will appear here.</p>
-            </div>
-        </section>
         {% endif %}
     </main>
 {% endblock %}
