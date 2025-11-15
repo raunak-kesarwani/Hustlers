@@ -41,7 +41,6 @@ async function generateQuiz() {
     const topic = document.getElementById('quizTopic').value.trim();
     const numQuestions = parseInt(document.getElementById('numQuestions').value) || 10;
     const difficulty = document.getElementById('difficulty').value;
-    const quizTimeMinutes = parseInt(document.getElementById('quizTime').value) || 0;
     
     if (!topic) {
         alert('Please enter a topic for the quiz');
@@ -77,15 +76,10 @@ async function generateQuiz() {
             skippedQuestions = []; // Reset skipped questions
             isReviewingSkipped = false; // Reset review flag
             
-            // Initialize timer if time limit is set
-            totalTimeLimit = quizTimeMinutes * 60; // Convert minutes to seconds
-            if (totalTimeLimit > 0) {
-                timeRemaining = totalTimeLimit;
-                startQuizTimer();
-            } else {
-                timeRemaining = 0;
-                stopQuizTimer(); // Clear any existing timer
-            }
+            // No timer functionality - always set to 0 (no time limit)
+            totalTimeLimit = 0;
+            timeRemaining = 0;
+            stopQuizTimer(); // Clear any existing timer
             
             if (results) {
                 // Display first question
