@@ -9,22 +9,28 @@ import json
 class ProgressTracker:
     """Tracks and manages user learning progress"""
     
-    def __init__(self, db):
-        """Initialize progress tracker with database"""
+    def __init__(self, db, progress_model=None):
+        """Initialize progress tracker with database and Progress model"""
         self.db = db
+        self.Progress = progress_model  # Store the model class
     
     def update_progress(self, topic, score, difficulty='medium', user_id=1):
         """
         Update user progress for a topic
         user_id defaults to 1 for demo purposes
         """
-        from app import Progress
+        # Use the Progress model passed during initialization
+        if not self.Progress:
+            # Fallback: try to import if not provided (for backward compatibility)
+            from app import Progress as ProgressModel
+            self.Progress = ProgressModel
         
         # Create or update progress entry
-        progress = Progress(
+        # Note: Progress model uses 'difficulty_level' field name
+        progress = self.Progress(
             user_id=user_id,
             topic=topic,
-            difficulty=difficulty,
+            difficulty_level=difficulty,  # Map 'difficulty' parameter to 'difficulty_level' field
             score=score,
             data=json.dumps({'last_updated': datetime.utcnow().isoformat()})
         )
@@ -34,15 +40,19 @@ class ProgressTracker:
     
     def get_progress(self, user_id=1):
         """Get all progress for a user"""
-        from app import Progress
+        # Use the Progress model passed during initialization
+        if not self.Progress:
+            # Fallback: try to import if not provided (for backward compatibility)
+            from app import Progress as ProgressModel
+            self.Progress = ProgressModel
         
-        progress_entries = Progress.query.filter_by(user_id=user_id).all()
+        progress_entries = self.Progress.query.filter_by(user_id=user_id).all()
         
         progress_data = []
         for entry in progress_entries:
             progress_data.append({
                 'topic': entry.topic,
-                'difficulty': entry.difficulty,
+                'difficulty': entry.difficulty_level,  # Map 'difficulty_level' field to 'difficulty' in response
                 'score': entry.score,
                 'completed_at': entry.completed_at.isoformat() if entry.completed_at else None
             })
@@ -54,13 +64,17 @@ class ProgressTracker:
         Determine adaptive difficulty based on past performance
         Returns: 'easy', 'medium', or 'hard'
         """
-        from app import Progress
+        # Use the Progress model passed during initialization
+        if not self.Progress:
+            # Fallback: try to import if not provided (for backward compatibility)
+            from app import Progress as ProgressModel
+            self.Progress = ProgressModel
         
         # Get recent progress for this topic
-        recent_progress = Progress.query.filter_by(
+        recent_progress = self.Progress.query.filter_by(
             user_id=user_id,
             topic=topic
-        ).order_by(Progress.completed_at.desc()).limit(5).all()
+        ).order_by(self.Progress.completed_at.desc()).limit(5).all()
         
         if not recent_progress:
             return 'medium'  # Default for new topics

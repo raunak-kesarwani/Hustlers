@@ -2,45 +2,58 @@
 AI Generator Module
 Handles all AI-powered content generation including notes, quizzes,
 flashcards, lesson plans, and doubt solving.
+Uses Google Gemini API for AI functionality.
 """
 
 import os
 import json
-from openai import OpenAI
+import google.generativeai as genai
 
 class AIGenerator:
     """Main class for generating AI-powered educational content"""
     
     def __init__(self):
-        """Initialize AI generator with API key"""
-        # Get API key from environment or use a default (for demo)
-        api_key = os.environ.get('OPENAI_API_KEY', '')
+        """Initialize AI generator with Gemini API key"""
+        # Get Gemini API key from environment
+        api_key = os.environ.get('GEMINI_API_KEY', '')
         if api_key:
-            self.client = OpenAI(api_key=api_key)
+            # Configure Gemini API with the provided key
+            genai.configure(api_key=api_key)
+            # Initialize the model (using gemini-pro for text generation)
+            self.model = genai.GenerativeModel('gemini-pro')
+            self.api_available = True
         else:
-            self.client = None
-            print("Warning: OpenAI API key not found. Using mock responses.")
+            self.model = None
+            self.api_available = False
+            print("Warning: Gemini API key not found. Using mock responses.")
     
     def _call_ai(self, prompt, max_tokens=2000):
         """
-        Call OpenAI API or return mock response
+        Call Gemini API or return mock response
         This is a helper method to handle AI calls
         """
-        if not self.client:
+        if not self.api_available or not self.model:
             # Return mock response for demo purposes
             return self._get_mock_response(prompt)
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are an expert educational content creator."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=max_tokens,
-                temperature=0.7
+            # Build the full prompt with system instruction
+            full_prompt = f"You are an expert educational content creator. {prompt}"
+            
+            # Generate content using Gemini API
+            # Note: Gemini uses max_output_tokens instead of max_tokens
+            generation_config = {
+                "temperature": 0.7,
+                "max_output_tokens": max_tokens,
+            }
+            
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config=generation_config
             )
-            return response.choices[0].message.content
+            
+            # Return the generated text
+            return response.text
         except Exception as e:
             print(f"AI API Error: {e}")
             return self._get_mock_response(prompt)
@@ -66,7 +79,7 @@ class AIGenerator:
                 ]
             })
         else:
-            return "This is a sample generated content. Please configure OpenAI API key for full functionality."
+            return "This is a sample generated content. Please configure Gemini API key for full functionality."
     
     def generate(self, topic, content_type='notes', difficulty='medium', language='en'):
         """

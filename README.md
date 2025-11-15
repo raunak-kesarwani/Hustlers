@@ -61,22 +61,23 @@ A comprehensive AI-powered e-learning platform that generates complete learning 
    pip install -r requirements.txt
    ```
 
-5. **Set up OpenAI API Key (Optional but Recommended)**
+5. **Set up Gemini API Key (Optional but Recommended)**
    
-   For full AI functionality, you need an OpenAI API key:
-   - Get your API key from [OpenAI](https://platform.openai.com/api-keys)
-   - Set it as an environment variable:
+   For full AI functionality, you need a Google Gemini API key:
+   - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - The API key is already configured in the `.env` file
+   - Alternatively, you can set it as an environment variable:
      - Windows (PowerShell):
        ```powershell
-       $env:OPENAI_API_KEY="your-api-key-here"
+       $env:GEMINI_API_KEY="your-api-key-here"
        ```
      - Windows (CMD):
        ```cmd
-       set OPENAI_API_KEY=your-api-key-here
+       set GEMINI_API_KEY=your-api-key-here
        ```
      - macOS/Linux:
        ```bash
-       export OPENAI_API_KEY="your-api-key-here"
+       export GEMINI_API_KEY="your-api-key-here"
        ```
    
    **Note**: The app will work without an API key but will use mock responses for demonstration purposes.
@@ -151,7 +152,7 @@ pro 2/
 
 ### Environment Variables
 
-- `OPENAI_API_KEY`: Your OpenAI API key for AI functionality
+- `GEMINI_API_KEY`: Your Google Gemini API key for AI functionality
 - `SECRET_KEY`: Flask secret key (defaults to dev key, change in production)
 
 ### Database
@@ -178,7 +179,7 @@ The application uses SQLite by default. The database file (`edumentor.db`) is cr
    - Make sure all dependencies are installed: `pip install -r requirements.txt`
 
 2. **API errors**
-   - Check if your OpenAI API key is set correctly
+   - Check if your Gemini API key is set correctly in the `.env` file
    - The app works with mock data if no API key is provided
 
 3. **Export errors**

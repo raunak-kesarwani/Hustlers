@@ -30,10 +30,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize extensions
 db = SQLAlchemy(app)
 
-# Initialize custom modules
+# Initialize custom modules (ProgressTracker will be initialized after Progress model is defined)
 ai_generator = AIGenerator()
 export_manager = ExportManager()
-progress_tracker = ProgressTracker(db)
 
 # Database Models
 class User(db.Model):
@@ -73,6 +72,9 @@ class GeneratedContent(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     content_metadata = db.Column(db.Text)  # JSON metadata
+
+# Initialize ProgressTracker after Progress model is defined
+progress_tracker = ProgressTracker(db, Progress)
 
 # Authentication Decorators
 def login_required(f):
@@ -505,6 +507,10 @@ def generate_homework():
 def create_tables():
     """Create database tables and create default admin user"""
     with app.app_context():
+        # Drop all existing tables and recreate them
+        # This ensures the schema is always up to date in development
+        # WARNING: This will delete all existing data!
+        db.drop_all()
         db.create_all()
         
         # Create default admin user if it doesn't exist
