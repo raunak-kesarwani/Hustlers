@@ -54,6 +54,10 @@
 
             <!-- Options -->
             <div class="options">
+                <div class="option-group" id="numQuestionsGroup" style="display: none;">
+                    <label for="numQuestions">Number of Questions:</label>
+                    <input type="number" id="numQuestions" value="10" min="1" max="50" style="padding: 0.5rem; border: 2px solid var(--border-color); border-radius: 6px;">
+                </div>
                 <div class="option-group">
                     <label for="difficulty">Difficulty Level:</label>
                     <select id="difficulty">
@@ -62,7 +66,7 @@
                         <option value="hard">Hard</option>
                     </select>
                 </div>
-                <div class="option-group">
+                <div class="option-group" id="languageGroup">
                     <label for="language">Language:</label>
                     <select id="language">
                         <option value="en" selected>English</option>
@@ -71,6 +75,10 @@
                         <option value="de">German</option>
                         <option value="hi">Hindi</option>
                     </select>
+                </div>
+                <div class="option-group" id="useInternetGroup" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="useInternet" style="width: auto; margin: 0;">
+                    <label for="useInternet" style="margin: 0; font-weight: normal;">Generate from Internet Sources</label>
                 </div>
             </div>
 

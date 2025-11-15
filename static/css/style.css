@@ -357,6 +357,53 @@ body {
     color: var(--primary-color);
 }
 
+/* Quiz Timer Styles */
+.quiz-timer {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.quiz-timer .timer-icon {
+    font-size: 1.2rem;
+}
+
+.quiz-timer .timer-text {
+    font-weight: 500;
+}
+
+.quiz-timer .timer-text strong {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Timer warning state - when less than 1 minute remains */
+.quiz-timer.timer-warning {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    animation: timerPulse 1s ease-in-out infinite;
+    box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Pulse animation for timer warning */
+@keyframes timerPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.6);
+    }
+}
+
 /* Quiz Navigation Buttons */
 .quiz-navigation {
     display: flex;

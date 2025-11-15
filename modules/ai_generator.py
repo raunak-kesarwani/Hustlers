@@ -135,33 +135,87 @@ class AIGenerator:
         return {'type': content_type, 'content': result}
     
     def generate_quiz(self, topic, num_questions=10, difficulty='medium'):
-        """Generate quiz with multiple choice questions"""
-        prompt = f"""Create {num_questions} multiple-choice questions on '{topic}' for {difficulty} level students.
-        Format as JSON with this structure:
+        """
+        Generate quiz with multiple choice questions related to the given topic
+        Creates questions that are directly relevant to the topic provided by the user
+        """
+        # Enhanced prompt to generate topic-specific quiz questions
+        # The topic is emphasized multiple times to ensure questions are strictly related to it
+        prompt = f"""You are creating a quiz about the specific topic: "{topic}"
+
+        CRITICAL REQUIREMENT: Every single question MUST be directly and specifically about "{topic}". 
+        Do NOT create general knowledge questions. Every question must relate to "{topic}".
+
+        Create exactly {num_questions} multiple-choice questions that are:
+        1. Directly about the topic: "{topic}"
+        2. Testing knowledge and understanding of "{topic}" specifically
+        3. Covering different aspects, concepts, and details of "{topic}"
+        4. Appropriate for {difficulty} difficulty level students
+        5. Each with exactly 4 answer options (A, B, C, D)
+        6. Including clear explanations that reference "{topic}"
+
+        Question Requirements:
+        - Each question must mention or clearly relate to "{topic}"
+        - Questions should explore: definitions, concepts, processes, facts, applications, or examples related to "{topic}"
+        - Options should be plausible but only one should be correct
+        - Explanations must explain why the answer is correct in the context of "{topic}"
+
+        Format as JSON with this exact structure:
         {{
             "questions": [
                 {{
-                    "question": "Question text",
-                    "options": ["A", "B", "C", "D"],
+                    "question": "A specific question about {topic}",
+                    "options": ["Option A related to {topic}", "Option B related to {topic}", "Option C related to {topic}", "Option D related to {topic}"],
                     "correct": 0,
-                    "explanation": "Why this answer is correct"
+                    "explanation": "Explanation that clearly connects the answer to {topic}"
                 }}
             ]
-        }}"""
+        }}
         
-        result = self._call_ai(prompt, max_tokens=3000)
+        Remember: ALL questions must be about "{topic}" - no generic questions allowed.
+        Return ONLY valid JSON, no additional text before or after."""
         
-        # Try to parse JSON, fallback to structured format
+        result = self._call_ai(prompt, max_tokens=4000)
+        
+        # Try to parse JSON, with better error handling
         try:
-            return json.loads(result)
-        except:
+            # Clean the result - remove any markdown code blocks if present
+            cleaned_result = result.strip()
+            if cleaned_result.startswith('```'):
+                # Remove markdown code blocks
+                lines = cleaned_result.split('\n')
+                cleaned_result = '\n'.join(lines[1:-1]) if lines[-1].strip() == '```' else '\n'.join(lines[1:])
+            
+            # Parse JSON
+            quiz_data = json.loads(cleaned_result)
+            
+            # Validate structure
+            if not isinstance(quiz_data, dict) or 'questions' not in quiz_data:
+                raise ValueError("Invalid quiz structure")
+            
+            # Ensure we have questions
+            if not quiz_data.get('questions') or len(quiz_data['questions']) == 0:
+                raise ValueError("No questions generated")
+            
+            return quiz_data
+            
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Error parsing quiz JSON: {e}")
+            print(f"Raw response: {result[:200]}...")  # Print first 200 chars for debugging
+            
+            # Fallback: return a structured format with a sample question
             return {
                 'questions': [
                     {
-                        'question': f"Sample question about {topic}?",
-                        'options': ['Option A', 'Option B', 'Option C', 'Option D'],
+                        'question': f"What is a key concept related to {topic}?",
+                        'options': [
+                            f'Option A related to {topic}',
+                            f'Option B related to {topic}',
+                            f'Option C related to {topic}',
+                            f'Option D related to {topic}'
+                        ],
                         'correct': 0,
-                        'explanation': 'Sample explanation'
+                        'explanation': f'This is a sample question about {topic}. Please check your API configuration for full functionality.'
                     }
                 ]
             }

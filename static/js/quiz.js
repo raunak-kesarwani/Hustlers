@@ -10,6 +10,11 @@ let userAnswers = {}; // Store user's answers for each question
 let skippedQuestions = []; // Track indices of skipped questions
 let isReviewingSkipped = false; // Flag to know if we're reviewing skipped questions
 
+// Timer variables for quiz timing
+let quizTimer = null; // Timer interval reference
+let timeRemaining = 0; // Time remaining in seconds
+let totalTimeLimit = 0; // Total time limit in seconds (0 = no limit)
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeQuizPage();
@@ -36,6 +41,7 @@ async function generateQuiz() {
     const topic = document.getElementById('quizTopic').value.trim();
     const numQuestions = parseInt(document.getElementById('numQuestions').value) || 10;
     const difficulty = document.getElementById('difficulty').value;
+    const quizTimeMinutes = parseInt(document.getElementById('quizTime').value) || 0;
     
     if (!topic) {
         alert('Please enter a topic for the quiz');
@@ -70,6 +76,16 @@ async function generateQuiz() {
             userAnswers = {}; // Reset answers
             skippedQuestions = []; // Reset skipped questions
             isReviewingSkipped = false; // Reset review flag
+            
+            // Initialize timer if time limit is set
+            totalTimeLimit = quizTimeMinutes * 60; // Convert minutes to seconds
+            if (totalTimeLimit > 0) {
+                timeRemaining = totalTimeLimit;
+                startQuizTimer();
+            } else {
+                timeRemaining = 0;
+                stopQuizTimer(); // Clear any existing timer
+            }
             
             if (results) {
                 // Display first question
@@ -124,10 +140,25 @@ function formatQuiz(quiz, questionIndex) {
         progressText = `Question ${questionIndex + 1} of ${totalQuestions}`;
     }
     
+    // Build timer display HTML if timer is active
+    let timerHtml = '';
+    if (totalTimeLimit > 0 && !isReviewingSkipped) {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        // Add warning class if time is running low (less than 1 minute)
+        const timerClass = timeRemaining < 60 ? 'timer-warning' : '';
+        timerHtml = `<div class="quiz-timer ${timerClass}">
+            <span class="timer-icon">⏱️</span>
+            <span class="timer-text">Time Remaining: <strong>${timeString}</strong></span>
+        </div>`;
+    }
+    
     // Build HTML for current question
     let html = `
         <div class="quiz-progress">
             <p>${progressText}</p>
+            ${timerHtml}
         </div>
         <div class="quiz-question" data-question-index="${questionIndex}">
             <h4>Question ${questionIndex + 1}: ${escapeHtml(question.question)}</h4>
@@ -191,7 +222,7 @@ function setupQuizNavigation() {
     const nextBtn = document.getElementById('nextBtn');
     if (nextBtn) {
         nextBtn.addEventListener('click', function() {
-            // Save current answer if selected
+            // Save current answer if selected (but don't require it)
             const selectedOption = document.querySelector('.quiz-options li.selected');
             if (selectedOption) {
                 const optionIndex = parseInt(selectedOption.dataset.optionIndex);
@@ -211,15 +242,35 @@ function setupQuizNavigation() {
             const questionDiv = document.querySelector('.quiz-question');
             const isAlreadyConfirmed = questionDiv.classList.contains('answered');
             
-            // If already confirmed and not last question, move to next
-            if (isAlreadyConfirmed && currentQuestionIndex < currentQuiz.questions.length - 1) {
-                currentQuestionIndex++;
-                const results = document.getElementById('quizResults');
-                if (results) {
-                    results.innerHTML = formatQuiz(currentQuiz, currentQuestionIndex);
-                    setupQuizNavigation();
+            // If already confirmed, move to next question
+            if (isAlreadyConfirmed) {
+                // If reviewing skipped questions, check if there are more
+                if (isReviewingSkipped) {
+                    const currentSkippedIndex = skippedQuestions.indexOf(currentQuestionIndex);
+                    if (currentSkippedIndex < skippedQuestions.length - 1) {
+                        // Move to next skipped question
+                        currentQuestionIndex = skippedQuestions[currentSkippedIndex + 1];
+                        const results = document.getElementById('quizResults');
+                        if (results) {
+                            results.innerHTML = formatQuiz(currentQuiz, currentQuestionIndex);
+                            setupQuizNavigation();
+                        }
+                        return;
+                    } else {
+                        // Last skipped question, show results
+                        showQuizResults();
+                        return;
+                    }
+                } else if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                    // Normal flow - move to next question
+                    currentQuestionIndex++;
+                    const results = document.getElementById('quizResults');
+                    if (results) {
+                        results.innerHTML = formatQuiz(currentQuiz, currentQuestionIndex);
+                        setupQuizNavigation();
+                    }
+                    return;
                 }
-                return;
             }
             
             const selectedOption = document.querySelector('.quiz-options li.selected');
@@ -256,29 +307,47 @@ function setupQuizNavigation() {
                 explanation.classList.remove('hidden');
             }
             
-            // Update button text and hide Next button if not last question
-            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
-                confirmBtn.textContent = 'Next Question';
-                // Hide the Next button since Confirm now handles navigation
-                const nextBtn = document.getElementById('nextBtn');
-                if (nextBtn) {
-                    nextBtn.style.display = 'none';
-                }
-            }
-            
-            // If it's the last question, check if there are skipped questions
-            if (currentQuestionIndex === currentQuiz.questions.length - 1) {
-                // Check if there are skipped questions to review
-                if (skippedQuestions.length > 0 && !isReviewingSkipped) {
-                    confirmBtn.textContent = 'Review Skipped Questions';
-                    confirmBtn.onclick = function() {
-                        startReviewingSkippedQuestions();
-                    };
-                } else {
+            // Update button text and behavior based on current state
+            if (isReviewingSkipped) {
+                // We're reviewing skipped questions
+                const currentSkippedIndex = skippedQuestions.indexOf(currentQuestionIndex);
+                const isLastSkipped = currentSkippedIndex === skippedQuestions.length - 1;
+                
+                if (isLastSkipped) {
                     confirmBtn.textContent = 'View Results';
                     confirmBtn.onclick = function() {
                         showQuizResults();
                     };
+                } else {
+                    confirmBtn.textContent = 'Next Question';
+                    // Hide the Next button since Confirm now handles navigation
+                    const nextBtn = document.getElementById('nextBtn');
+                    if (nextBtn) {
+                        nextBtn.style.display = 'none';
+                    }
+                }
+            } else {
+                // Normal quiz flow
+                if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                    confirmBtn.textContent = 'Next Question';
+                    // Hide the Next button since Confirm now handles navigation
+                    const nextBtn = document.getElementById('nextBtn');
+                    if (nextBtn) {
+                        nextBtn.style.display = 'none';
+                    }
+                } else {
+                    // Last question of main quiz - check if there are skipped questions
+                    if (skippedQuestions.length > 0) {
+                        confirmBtn.textContent = 'Review Skipped Questions';
+                        confirmBtn.onclick = function() {
+                            startReviewingSkippedQuestions();
+                        };
+                    } else {
+                        confirmBtn.textContent = 'View Results';
+                        confirmBtn.onclick = function() {
+                            showQuizResults();
+                        };
+                    }
                 }
             }
         });
@@ -371,10 +440,92 @@ function startReviewingSkippedQuestions() {
 }
 
 /**
+ * Start the quiz timer
+ * Updates every second and auto-submits when time runs out
+ */
+function startQuizTimer() {
+    // Clear any existing timer first
+    stopQuizTimer();
+    
+    // Update timer every second
+    quizTimer = setInterval(function() {
+        if (timeRemaining > 0) {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            // Show warning when less than 1 minute remains
+            if (timeRemaining === 60) {
+                // Update timer display with warning class
+                updateTimerDisplay();
+            }
+            
+            // Auto-submit when time runs out
+            if (timeRemaining === 0) {
+                stopQuizTimer();
+                alert('Time is up! Your quiz will be submitted automatically.');
+                // Save any current answer before submitting
+                const selectedOption = document.querySelector('.quiz-options li.selected');
+                if (selectedOption) {
+                    const optionIndex = parseInt(selectedOption.dataset.optionIndex);
+                    userAnswers[currentQuestionIndex] = optionIndex;
+                }
+                // Show results
+                showQuizResults();
+            }
+        } else {
+            stopQuizTimer();
+        }
+    }, 1000);
+    
+    // Initial display update
+    updateTimerDisplay();
+}
+
+/**
+ * Stop the quiz timer
+ */
+function stopQuizTimer() {
+    if (quizTimer) {
+        clearInterval(quizTimer);
+        quizTimer = null;
+    }
+}
+
+/**
+ * Update the timer display in the quiz progress section
+ */
+function updateTimerDisplay() {
+    if (totalTimeLimit > 0 && !isReviewingSkipped) {
+        const timerElement = document.querySelector('.quiz-timer');
+        if (timerElement) {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer text
+            const timerText = timerElement.querySelector('.timer-text');
+            if (timerText) {
+                timerText.innerHTML = `Time Remaining: <strong>${timeString}</strong>`;
+            }
+            
+            // Add/remove warning class based on time remaining
+            if (timeRemaining < 60) {
+                timerElement.classList.add('timer-warning');
+            } else {
+                timerElement.classList.remove('timer-warning');
+            }
+        }
+    }
+}
+
+/**
  * Show quiz results summary with detailed review of all questions
  * Shows previously asked questions, correct answers, and wrong answers
  */
 function showQuizResults() {
+    // Stop timer when showing results
+    stopQuizTimer();
+    
     if (!currentQuiz || !currentQuiz.questions) {
         return;
     }
@@ -467,6 +618,11 @@ function showQuizResults() {
                 currentQuiz = null;
                 currentQuestionIndex = 0;
                 userAnswers = {};
+                skippedQuestions = [];
+                isReviewingSkipped = false;
+                totalTimeLimit = 0;
+                timeRemaining = 0;
+                stopQuizTimer(); // Stop any running timer
                 results.classList.add('hidden');
                 results.innerHTML = '';
             });

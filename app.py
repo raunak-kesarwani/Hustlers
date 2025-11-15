@@ -20,6 +20,8 @@ load_dotenv()
 from modules.ai_generator import AIGenerator
 from modules.export_manager import ExportManager
 from modules.progress_tracker import ProgressTracker
+from modules.quiz_fetcher import QuizFetcher
+from modules.study_material_fetcher import StudyMaterialFetcher
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -33,6 +35,10 @@ db = SQLAlchemy(app)
 # Initialize custom modules (ProgressTracker will be initialized after Progress model is defined)
 ai_generator = AIGenerator()
 export_manager = ExportManager()
+# Initialize quiz fetcher with AI generator as fallback
+quiz_fetcher = QuizFetcher(ai_generator=ai_generator)
+# Initialize study material fetcher with AI generator for compiling internet content
+study_material_fetcher = StudyMaterialFetcher(ai_generator=ai_generator)
 
 # Database Models
 class User(db.Model):
@@ -298,17 +304,54 @@ def generate_content():
         content_type = data.get('content_type', 'notes')  # notes, summary, quiz, etc.
         difficulty = data.get('difficulty', 'medium')
         language = data.get('language', 'en')
+        use_internet = data.get('use_internet', False)  # Option to generate from internet
         
         if not topic:
             return jsonify({'error': 'Topic is required'}), 400
         
-        # Generate content using AI
-        result = ai_generator.generate(
-            topic=topic,
-            content_type=content_type,
-            difficulty=difficulty,
-            language=language
-        )
+        # Handle quiz generation specially - use dedicated quiz generation
+        if content_type == 'quiz':
+            # Validate topic is not empty (already checked above, but ensure it's clean)
+            topic = topic.strip()
+            if not topic:
+                return jsonify({'error': 'Topic is required for quiz generation'}), 400
+            
+            # Generate quiz questions directly using AI for the given topic
+            # The topic entered by the user is passed to generate topic-specific questions
+            num_questions = data.get('num_questions', 10)  # Default to 10 questions
+            
+            # Generate quiz questions based on the user's topic
+            quiz_result = ai_generator.generate_quiz(
+                topic=topic,  # User's entered topic - used to generate relevant questions
+                num_questions=num_questions,
+                difficulty=difficulty
+            )
+            
+            # Format quiz result to match expected structure
+            # Include the topic in the result so frontend can display it
+            result = {
+                'type': 'quiz',
+                'topic': topic,  # Store the topic for reference
+                'questions': quiz_result.get('questions', []),
+                'difficulty': difficulty
+            }
+        # Generate content - use internet sources if requested
+        elif use_internet:
+            # Fetch from internet and compile using AI
+            result = study_material_fetcher.compile_study_material(
+                topic=topic,
+                content_type=content_type,
+                difficulty=difficulty,
+                language=language
+            )
+        else:
+            # Generate content using AI only
+            result = ai_generator.generate(
+                topic=topic,
+                content_type=content_type,
+                difficulty=difficulty,
+                language=language
+            )
         
         # Save to database
         content = GeneratedContent(
@@ -316,7 +359,11 @@ def generate_content():
             content_type=content_type,
             topic=topic,
             content=json.dumps(result),
-            content_metadata=json.dumps({'difficulty': difficulty, 'language': language})
+            content_metadata=json.dumps({
+                'difficulty': difficulty, 
+                'language': language,
+                'use_internet': use_internet
+            })
         )
         db.session.add(content)
         db.session.commit()
@@ -333,7 +380,7 @@ def generate_content():
 @app.route('/quiz', methods=['POST'])
 @login_required
 def generate_quiz():
-    """Generate quiz with questions and answers - requires login"""
+    """Generate quiz with questions and answers from internet sources - requires login"""
     try:
         data = request.json
         topic = data.get('topic', '')
@@ -343,7 +390,8 @@ def generate_quiz():
         if not topic:
             return jsonify({'error': 'Topic is required'}), 400
         
-        quiz = ai_generator.generate_quiz(
+        # Fetch quiz from internet sources (with AI fallback)
+        quiz = quiz_fetcher.fetch_quiz(
             topic=topic,
             num_questions=num_questions,
             difficulty=difficulty
@@ -353,6 +401,61 @@ def generate_quiz():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/generate-quiz-questions', methods=['POST'])
+@login_required
+def generate_quiz_questions():
+    """
+    Generate quiz questions directly using AI for a given topic
+    This endpoint focuses on generating questions based on user-provided topics
+    """
+    try:
+        data = request.json
+        topic = data.get('topic', '').strip()
+        num_questions = data.get('num_questions', 10)
+        difficulty = data.get('difficulty', 'medium')
+        
+        # Validate topic is provided
+        if not topic:
+            return jsonify({'error': 'Topic is required. Please provide a topic for quiz generation.'}), 400
+        
+        # Validate number of questions
+        try:
+            num_questions = int(num_questions)
+            if num_questions < 1 or num_questions > 50:
+                return jsonify({'error': 'Number of questions must be between 1 and 50'}), 400
+        except (ValueError, TypeError):
+            num_questions = 10
+        
+        # Validate difficulty
+        if difficulty not in ['easy', 'medium', 'hard']:
+            difficulty = 'medium'
+        
+        # Generate quiz questions directly using AI
+        # This ensures we always get questions related to the specific topic
+        quiz = ai_generator.generate_quiz(
+            topic=topic,
+            num_questions=num_questions,
+            difficulty=difficulty
+        )
+        
+        # Validate that we got questions
+        if not quiz or not quiz.get('questions'):
+            return jsonify({
+                'error': 'Failed to generate quiz questions. Please try again or check your API configuration.'
+            }), 500
+        
+        # Return the generated quiz questions
+        return jsonify({
+            'success': True,
+            'topic': topic,
+            'num_questions': len(quiz.get('questions', [])),
+            'difficulty': difficulty,
+            'quiz': quiz
+        })
+    
+    except Exception as e:
+        return jsonify({'error': f'Error generating quiz questions: {str(e)}'}), 500
 
 @app.route('/flashcards', methods=['POST'])
 @login_required

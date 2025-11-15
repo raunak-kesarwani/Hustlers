@@ -13,7 +13,32 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     initializeMobileMenu();
     loadProgress();
+    // Initialize field visibility based on default content type
+    updateFieldVisibility();
 });
+
+/**
+ * Update field visibility based on selected content type
+ */
+function updateFieldVisibility() {
+    const numQuestionsGroup = document.getElementById('numQuestionsGroup');
+    const languageGroup = document.getElementById('languageGroup');
+    const useInternetGroup = document.getElementById('useInternetGroup');
+    
+    if (selectedContentType === 'quiz') {
+        // Show number of questions field for quiz
+        if (numQuestionsGroup) numQuestionsGroup.style.display = 'block';
+        // Hide language and internet options for quiz (not applicable)
+        if (languageGroup) languageGroup.style.display = 'none';
+        if (useInternetGroup) useInternetGroup.style.display = 'none';
+    } else {
+        // Hide number of questions for other content types
+        if (numQuestionsGroup) numQuestionsGroup.style.display = 'none';
+        // Show language and internet options for other content types
+        if (languageGroup) languageGroup.style.display = 'block';
+        if (useInternetGroup) useInternetGroup.style.display = 'flex';
+    }
+}
 
 /**
  * Initialize all event listeners
@@ -25,6 +50,9 @@ function initializeEventListeners() {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             selectedContentType = this.dataset.type;
+            
+            // Update field visibility when content type changes
+            updateFieldVisibility();
         });
     });
 
@@ -59,6 +87,11 @@ async function generateContent() {
     const topic = document.getElementById('topic').value.trim();
     const difficulty = document.getElementById('difficulty').value;
     const language = document.getElementById('language').value;
+    // Check if user wants to generate from internet sources
+    const useInternet = document.getElementById('useInternet') ? document.getElementById('useInternet').checked : false;
+    // Get number of questions for quiz
+    const numQuestions = selectedContentType === 'quiz' ? 
+        (parseInt(document.getElementById('numQuestions').value) || 10) : 10;
     
     if (!topic) {
         alert('Please enter a topic');
@@ -70,17 +103,26 @@ async function generateContent() {
     document.getElementById('results').classList.add('hidden');
     
     try {
+        // Build request body
+        const requestBody = {
+            topic: topic,
+            content_type: selectedContentType,
+            difficulty: difficulty,
+            language: language,
+            use_internet: useInternet
+        };
+        
+        // Add number of questions for quiz
+        if (selectedContentType === 'quiz') {
+            requestBody.num_questions = numQuestions;
+        }
+        
         const response = await fetch('/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                topic: topic,
-                content_type: selectedContentType,
-                difficulty: difficulty,
-                language: language
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const data = await response.json();
@@ -119,7 +161,27 @@ function displayContent(content) {
     } else {
         // Regular content
         const contentText = content.content || content.script || content.description || JSON.stringify(content);
-        html = `<h4>${content.topic || 'Generated Content'}</h4><p>${escapeHtml(contentText)}</p>`;
+        html = `<h4>${content.topic || 'Generated Content'}</h4>`;
+        
+        // Show if generated from internet
+        if (content.generated_from_internet) {
+            html += '<p style="color: #10b981; font-size: 0.875rem; margin-bottom: 1rem;">✓ Generated from internet sources</p>';
+        }
+        
+        html += `<div style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(contentText)}</div>`;
+        
+        // Show sources if available
+        if (content.sources && content.sources.length > 0) {
+            html += '<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">';
+            html += '<h5 style="margin-bottom: 0.5rem;">Sources:</h5>';
+            html += '<ul style="list-style: none; padding: 0;">';
+            content.sources.forEach(source => {
+                if (source) {
+                    html += `<li style="margin-bottom: 0.5rem;"><a href="${escapeHtml(source)}" target="_blank" style="color: #3b82f6; text-decoration: underline;">${escapeHtml(source)}</a></li>`;
+                }
+            });
+            html += '</ul></div>';
+        }
     }
     
     display.innerHTML = html;
@@ -134,7 +196,14 @@ function formatQuiz(quiz) {
         return '<p>Quiz data format error</p>';
     }
     
-    let html = '<div class="quiz-container">';
+    // Display the topic at the top to confirm questions are about the entered topic
+    const topic = quiz.topic || 'the selected topic';
+    let html = `<div class="quiz-container">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">📚 Quiz: ${escapeHtml(topic)}</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">${quiz.questions.length} question${quiz.questions.length !== 1 ? 's' : ''} about ${escapeHtml(topic)}</p>
+        </div>`;
+    
     quiz.questions.forEach((q, index) => {
         html += `
             <div class="quiz-question">
